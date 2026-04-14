@@ -22,11 +22,12 @@ jobs:
           cache: 'pip'
 
       - name: Install dependencies
-        run: pip install -r requirements.txt
+        run: pip install --upgrade pip && pip install -r requirements.txt
 
       # ── Crypto prices (CoinGecko + Binance + CMC) ──────────────────────────
       - name: Fetch crypto prices
         run: python scripts/data/fetch_crypto_prices.py
+        continue-on-error: true
         env:
           FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
           FIREBASE_PRIVATE_KEY: ${{ secrets.FIREBASE_PRIVATE_KEY }}
@@ -39,6 +40,7 @@ jobs:
       # ── Traditional commodities (Alpha Vantage) ────────────────────────────
       - name: Fetch Gold & Silver prices
         run: python scripts/data/fetch_traditional.py
+        continue-on-error: true
         env:
           FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
           FIREBASE_PRIVATE_KEY: ${{ secrets.FIREBASE_PRIVATE_KEY }}
@@ -48,6 +50,7 @@ jobs:
       # ── Order book depth ───────────────────────────────────────────────────
       - name: Fetch order books
         run: python scripts/data/fetch_orderbook.py
+        continue-on-error: true
         env:
           FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
           FIREBASE_PRIVATE_KEY: ${{ secrets.FIREBASE_PRIVATE_KEY }}
@@ -56,6 +59,7 @@ jobs:
       # ── Futures: funding rates + OI + L/S ratio ────────────────────────────
       - name: Fetch funding rates & futures data
         run: python scripts/data/fetch_funding_rates.py
+        continue-on-error: true
         env:
           FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
           FIREBASE_PRIVATE_KEY: ${{ secrets.FIREBASE_PRIVATE_KEY }}
@@ -64,6 +68,7 @@ jobs:
       # ── On-chain data (Etherscan / BscScan / Solscan / Moralis) ───────────
       - name: Fetch on-chain data
         run: python scripts/data/fetch_onchain_data.py
+        continue-on-error: true
         env:
           FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
           FIREBASE_PRIVATE_KEY: ${{ secrets.FIREBASE_PRIVATE_KEY }}
@@ -76,6 +81,7 @@ jobs:
       # ── Sentiment (LunarCrush / CryptoPanic / Santiment) ──────────────────
       - name: Fetch sentiment data
         run: python scripts/data/fetch_sentiment.py
+        continue-on-error: true
         env:
           FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
           FIREBASE_PRIVATE_KEY: ${{ secrets.FIREBASE_PRIVATE_KEY }}
