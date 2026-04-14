@@ -2,18 +2,20 @@
  * app.js — Main app state, real-time listeners, routing, helpers.
  */
 
-import { db, auth } from './firebase-config.js';
+import { db, auth, IS_CONFIGURED } from './firebase-config.js';
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
-// Safe imports for Firestore (may be stub in preview mode)
+// Firestore functions — only load when Firebase is actually configured
 let _doc, _onSnapshot, _collection;
-try {
-  const fs = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js");
-  _doc        = fs.doc;
-  _onSnapshot = fs.onSnapshot;
-  _collection = fs.collection;
-} catch(e) {
-  _doc = _onSnapshot = _collection = null;
+if (IS_CONFIGURED) {
+  try {
+    const fs = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js");
+    _doc        = fs.doc;
+    _onSnapshot = fs.onSnapshot;
+    _collection = fs.collection;
+  } catch(e) {
+    _doc = _onSnapshot = _collection = null;
+  }
 }
 
 // ─── Mock data for preview mode ───────────────────────────
@@ -35,7 +37,7 @@ const MOCK_PRICES = {
   SILVER: { price:31.20,  change_24h:-0.2,  high_24h:31.5,  low_24h:30.9,  volume_24h:0           },
 };
 
-const IS_PREVIEW = !(_doc && _onSnapshot);
+const IS_PREVIEW = !IS_CONFIGURED;
 
 // ─── App State ────────────────────────────────────────────
 export const AppState = {

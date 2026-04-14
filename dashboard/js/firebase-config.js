@@ -64,4 +64,4 @@ if (IS_CONFIGURED) {
   googleProvider = {};
 }
 
-export { db, auth, googleProvider };
+export { db, auth, googleProvider, IS_CONFIGURED };
