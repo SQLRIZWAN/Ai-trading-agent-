@@ -1,0 +1,34 @@
+# ─────────────────────────────────────────────
+#  AI Trading Agent — Python Dependencies
+# ─────────────────────────────────────────────
+
+# Firebase
+firebase-admin==6.5.0
+
+# Exchange Trading (unified API)
+ccxt==4.3.0
+
+# AI — Google Gemini
+google-generativeai==0.7.0
+
+# Data & Technical Analysis
+pandas==2.2.0
+numpy==1.26.0
+ta==0.11.0
+
+# API Clients
+requests==2.31.0
+aiohttp==3.9.0
+
+# Telegram Alerts
+python-telegram-bot==21.0
+
+# Crypto / Web3
+web3==7.0.0
+
+# Security — AES-256 encryption
+cryptography==42.0.0
+
+# Utilities
+python-dateutil==2.9.0
+pytz==2024.1

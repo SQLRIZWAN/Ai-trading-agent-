@@ -1,0 +1,85 @@
+name: Data Fetcher
+
+on:
+  schedule:
+    - cron: '*/5 * * * *'   # Every 5 minutes
+  workflow_dispatch:          # Manual trigger
+
+jobs:
+  fetch:
+    name: Fetch Market + On-Chain + Sentiment Data
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      # ── Crypto prices (CoinGecko + Binance + CMC) ──────────────────────────
+      - name: Fetch crypto prices
+        run: python scripts/data/fetch_crypto_prices.py
+        env:
+          FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
+          FIREBASE_PRIVATE_KEY: ${{ secrets.FIREBASE_PRIVATE_KEY }}
+          FIREBASE_CLIENT_EMAIL: ${{ secrets.FIREBASE_CLIENT_EMAIL }}
+          COINGECKO_API_KEY: ${{ secrets.COINGECKO_API_KEY }}
+          BINANCE_API_KEY: ${{ secrets.BINANCE_API_KEY }}
+          BINANCE_API_SECRET: ${{ secrets.BINANCE_API_SECRET }}
+          COINMARKETCAP_API_KEY: ${{ secrets.COINMARKETCAP_API_KEY }}
+
+      # ── Traditional commodities (Alpha Vantage) ────────────────────────────
+      - name: Fetch Gold & Silver prices
+        run: python scripts/data/fetch_traditional.py
+        env:
+          FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
+          FIREBASE_PRIVATE_KEY: ${{ secrets.FIREBASE_PRIVATE_KEY }}
+          FIREBASE_CLIENT_EMAIL: ${{ secrets.FIREBASE_CLIENT_EMAIL }}
+          ALPHA_VANTAGE_API_KEY: ${{ secrets.ALPHA_VANTAGE_API_KEY }}
+
+      # ── Order book depth ───────────────────────────────────────────────────
+      - name: Fetch order books
+        run: python scripts/data/fetch_orderbook.py
+        env:
+          FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
+          FIREBASE_PRIVATE_KEY: ${{ secrets.FIREBASE_PRIVATE_KEY }}
+          FIREBASE_CLIENT_EMAIL: ${{ secrets.FIREBASE_CLIENT_EMAIL }}
+
+      # ── Futures: funding rates + OI + L/S ratio ────────────────────────────
+      - name: Fetch funding rates & futures data
+        run: python scripts/data/fetch_funding_rates.py
+        env:
+          FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
+          FIREBASE_PRIVATE_KEY: ${{ secrets.FIREBASE_PRIVATE_KEY }}
+          FIREBASE_CLIENT_EMAIL: ${{ secrets.FIREBASE_CLIENT_EMAIL }}
+
+      # ── On-chain data (Etherscan / BscScan / Solscan / Moralis) ───────────
+      - name: Fetch on-chain data
+        run: python scripts/data/fetch_onchain_data.py
+        env:
+          FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
+          FIREBASE_PRIVATE_KEY: ${{ secrets.FIREBASE_PRIVATE_KEY }}
+          FIREBASE_CLIENT_EMAIL: ${{ secrets.FIREBASE_CLIENT_EMAIL }}
+          ETHERSCAN_API_KEY: ${{ secrets.ETHERSCAN_API_KEY }}
+          BSCSCAN_API_KEY: ${{ secrets.BSCSCAN_API_KEY }}
+          SOLSCAN_API_KEY: ${{ secrets.SOLSCAN_API_KEY }}
+          MORALIS_API_KEY: ${{ secrets.MORALIS_API_KEY }}
+
+      # ── Sentiment (LunarCrush / CryptoPanic / Santiment) ──────────────────
+      - name: Fetch sentiment data
+        run: python scripts/data/fetch_sentiment.py
+        env:
+          FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
+          FIREBASE_PRIVATE_KEY: ${{ secrets.FIREBASE_PRIVATE_KEY }}
+          FIREBASE_CLIENT_EMAIL: ${{ secrets.FIREBASE_CLIENT_EMAIL }}
+          LUNARCRUSH_API_KEY: ${{ secrets.LUNARCRUSH_API_KEY }}
+          CRYPTOPANIC_API_KEY: ${{ secrets.CRYPTOPANIC_API_KEY }}
+          SANTIMENT_API_KEY: ${{ secrets.SANTIMENT_API_KEY }}
