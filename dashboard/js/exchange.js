@@ -4,8 +4,12 @@
  */
 
 import { db, auth } from './firebase-config.js';
-import { doc, getDoc, setDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 import { showToast } from './app.js';
+
+// Dynamic import — only loaded when saving exchange config (user signed in)
+async function _firestore() {
+  return import("https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js");
+}
 
 const SUPPORTED_EXCHANGES = ['binance', 'bitget', 'bybit', 'okx', 'kucoin'];
 
@@ -181,6 +185,7 @@ window.saveExchangeConnection = async function() {
     const encKey = await encryptText(apiKey, password);
     const encSecret = await encryptText(secret, password);
 
+    const { doc, getDoc, setDoc } = await _firestore();
     const userDocRef = doc(db, 'users', user.uid);
     const userDoc = await getDoc(userDocRef);
     const userData = userDoc.exists() ? userDoc.data() : { exchanges: [] };

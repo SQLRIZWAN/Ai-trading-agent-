@@ -3,8 +3,12 @@
  */
 
 import { db, auth } from './firebase-config.js';
-import { doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 import { AppState, formatPrice, formatPnl, showToast } from './app.js';
+
+// Dynamic imports — only loaded when user is signed in and clicks an action
+async function _firestore() {
+  return import("https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js");
+}
 
 const DEMO_INITIAL = 10000;
 
@@ -173,6 +177,7 @@ window.resetDemoAccount = async function() {
   if (!user) return;
   if (!confirm('Reset demo account to $10,000? All positions will be closed.')) return;
 
+  const { doc, setDoc } = await _firestore();
   const docRef = doc(db, 'demo_accounts', user.uid);
   await setDoc(docRef, {
     balance: { USDT: { free: DEMO_INITIAL, used: 0, total: DEMO_INITIAL } },

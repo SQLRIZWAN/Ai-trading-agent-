@@ -338,24 +338,27 @@ import {
   AppState, setMode, showToast, navigateTo,
   startSignalListener, startPortfolioListener, startDemoListener,
   formatPrice, formatPnl
-} from './js/app.js';
-import { renderSignals, renderSignalStats } from './js/signals.js';
-import { renderFuturesPanel } from './js/futures.js';
-import { renderDemoPage } from './js/demo.js';
-import { renderPortfolioSummary, renderOpenPositions, renderTradeHistory } from './js/portfolio.js';
-import { renderExchangeConnectForm, renderConnectedExchanges } from './js/exchange.js';
-import { renderEquityCurve, renderConfidenceChart, startChartRefresh } from './js/charts.js';
-import { auth, googleProvider } from './js/firebase-config.js';
-import { signInWithPopup, signOut } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+} from './js/app.js?v=3';
+import { renderSignals, renderSignalStats } from './js/signals.js?v=3';
+import { renderFuturesPanel } from './js/futures.js?v=3';
+import { renderDemoPage } from './js/demo.js?v=3';
+import { renderPortfolioSummary, renderOpenPositions, renderTradeHistory } from './js/portfolio.js?v=3';
+import { renderExchangeConnectForm, renderConnectedExchanges } from './js/exchange.js?v=3';
+import { renderEquityCurve, renderConfidenceChart, startChartRefresh } from './js/charts.js?v=3';
+import { auth, googleProvider } from './js/firebase-config.js?v=3';
 
-// ─── Auth handler ─────────────────────────────────────────
+// ─── Auth handler (Firebase auth loaded dynamically — no blocking CDN import) ──
 window.handleAuth = async function() {
   if (AppState.user) {
-    await signOut(auth);
+    try {
+      const { signOut } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js');
+      await signOut(auth);
+    } catch(e) { /* preview mode */ }
     document.getElementById('auth-btn').textContent = 'Sign In';
     showToast('Signed out', 'info');
   } else {
     try {
+      const { signInWithPopup } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js');
       await signInWithPopup(auth, googleProvider);
       document.getElementById('auth-btn').textContent = 'Sign Out';
       showToast('Signed in!', 'success');
@@ -367,6 +370,7 @@ window.handleAuth = async function() {
 
 // ─── Page renderers ───────────────────────────────────────
 function initHomePage() {
+  updateHomeStats();
   renderSignals('home-signals-spot',    'spot');
   renderSignals('home-signals-futures', 'futures');
   renderOpenPositions('home-positions-table');
