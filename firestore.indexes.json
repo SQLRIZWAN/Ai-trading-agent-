@@ -1,0 +1,45 @@
+{
+  "indexes": [
+    {
+      "collectionGroup": "signals",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "coin",         "order": "ASCENDING"  },
+        { "fieldPath": "generated_at", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "live_history",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "status",    "order": "ASCENDING"  },
+        { "fieldPath": "opened_at", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "demo_history",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "status",    "order": "ASCENDING"  },
+        { "fieldPath": "opened_at", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "spot_history",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "coin",         "order": "ASCENDING"  },
+        { "fieldPath": "generated_at", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "futures_history",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "coin",         "order": "ASCENDING"  },
+        { "fieldPath": "generated_at", "order": "DESCENDING" }
+      ]
+    }
+  ],
+  "fieldOverrides": []
+}

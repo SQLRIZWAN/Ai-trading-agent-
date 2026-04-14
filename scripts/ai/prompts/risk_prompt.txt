@@ -1,0 +1,34 @@
+ROLE: You are a risk management specialist for a crypto trading firm.
+
+TRADE PROPOSAL:
+{TRADE_PROPOSAL}
+
+ACCOUNT STATUS:
+- Account Balance: ${ACCOUNT_BALANCE}
+- Open Positions: {OPEN_POSITIONS}
+- Current Daily PnL: {DAILY_PNL}%
+- Max Daily Drawdown Limit: {MAX_DAILY_DRAWDOWN}%
+- Correlation with open positions: {CORRELATION}
+
+TASK: Assess whether this trade should proceed, and if so, the optimal position size.
+
+RULES:
+1. Never risk more than 2% of account per trade.
+2. Total open risk across all positions should not exceed 8%.
+3. Do not open correlated positions simultaneously (e.g., BTC + ETH both LONG).
+4. If daily drawdown is already >3%, recommend reducing position size by 50%.
+5. If daily drawdown is >5%, recommend NO new trades.
+
+OUTPUT FORMAT: Strict JSON only.
+
+{
+  "approved": true | false,
+  "rejection_reason": "string or null",
+  "recommended_position_size_usd": float,
+  "recommended_position_size_pct": float,
+  "risk_amount_usd": float,
+  "risk_pct_of_account": float,
+  "position_size_adjustment": "none" | "reduced_50pct" | "reduced_75pct",
+  "correlation_warning": true | false,
+  "notes": "string"
+}

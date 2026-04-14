@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Trading Agent — Dashboard</title>
+  <meta name="description" content="AI-powered crypto trading agent with Spot, Futures, and Demo trading" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" />
+  <link rel="stylesheet" href="css/dashboard.css" />
+</head>
+<body>
+
+<!-- ── Toast container ─────────────────────────────────── -->
+<div id="toast-container"></div>
+
+<!-- ══════════════════════════════════════════════════════
+     NAVBAR
+══════════════════════════════════════════════════════ -->
+<nav class="navbar">
+  <a class="navbar-brand" href="#">
+    <div class="logo-icon">🤖</div>
+    AI Trading Agent
+  </a>
+
+  <ul class="navbar-nav">
+    <li><a href="#" data-page="home"     class="active">Dashboard</a></li>
+    <li><a href="#" data-page="signals"          >Signals</a></li>
+    <li><a href="#" data-page="futures"          >Futures</a></li>
+    <li><a href="#" data-page="demo"             >Demo</a></li>
+    <li><a href="#" data-page="portfolio"        >Portfolio</a></li>
+    <li><a href="#" data-page="exchange"         >Exchange</a></li>
+  </ul>
+
+  <div class="navbar-actions">
+    <!-- Mode toggle -->
+    <div class="mode-badge live" title="Click to switch mode">
+      <div class="dot"></div>
+      <span class="mode-label">LIVE</span>
+    </div>
+
+    <!-- Auth button -->
+    <button class="btn btn-ghost btn-sm" id="auth-btn" onclick="handleAuth()">Sign In</button>
+
+    <!-- Settings -->
+    <button class="btn btn-ghost btn-sm" onclick="navigateTo('exchange')" title="Settings">⚙️</button>
+  </div>
+</nav>
+
+<!-- ── Ticker strip ─────────────────────────────────────── -->
+<div class="ticker-strip">
+  <div class="ticker-inner" id="ticker-bar">
+    <!-- Injected by JS -->
+    <div class="ticker-item" id="ticker-BTC">
+      <span class="ticker-coin blue">BTC</span>
+      <span class="ticker-price">$—</span>
+      <span class="ticker-change">—%</span>
+    </div>
+    <div class="ticker-item" id="ticker-ETH">
+      <span class="ticker-coin purple">ETH</span>
+      <span class="ticker-price">$—</span>
+      <span class="ticker-change">—%</span>
+    </div>
+    <div class="ticker-item" id="ticker-SOL">
+      <span class="ticker-coin green">SOL</span>
+      <span class="ticker-price">$—</span>
+      <span class="ticker-change">—%</span>
+    </div>
+    <div class="ticker-item" id="ticker-PI">
+      <span class="ticker-coin gold">PI</span>
+      <span class="ticker-price">$—</span>
+      <span class="ticker-change">—%</span>
+    </div>
+    <div class="ticker-item" id="ticker-GOLD">
+      <span class="ticker-coin gold">GOLD</span>
+      <span class="ticker-price">$—</span>
+      <span class="ticker-change">—%</span>
+    </div>
+    <div class="ticker-item" id="ticker-SILVER">
+      <span class="ticker-coin">SILVER</span>
+      <span class="ticker-price">$—</span>
+      <span class="ticker-change">—%</span>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     PAGE: HOME / DASHBOARD
+══════════════════════════════════════════════════════ -->
+<div id="page-home" class="page page-section">
+
+  <!-- Stats row -->
+  <div class="grid-4col" style="margin-bottom:20px;" id="home-stats">
+    <div class="stat-card card">
+      <div class="label">Live Balance</div>
+      <div class="value" id="stat-live-balance">$—</div>
+      <div class="change green" id="stat-live-pnl">—</div>
+    </div>
+    <div class="stat-card card">
+      <div class="label">Demo Balance</div>
+      <div class="value purple" id="stat-demo-balance">$—</div>
+      <div class="change green" id="stat-demo-pnl">—</div>
+    </div>
+    <div class="stat-card card">
+      <div class="label">Active Signals</div>
+      <div class="value blue" id="stat-signals">—</div>
+      <div class="sub">across all assets</div>
+    </div>
+    <div class="stat-card card">
+      <div class="label">Open Trades</div>
+      <div class="value" id="stat-open-trades">—</div>
+      <div class="sub" id="stat-open-trades-sub">live · demo</div>
+    </div>
+  </div>
+
+  <!-- Main grid -->
+  <div class="grid-2col">
+
+    <!-- LEFT: Signals panel -->
+    <div>
+      <div class="section-header">
+        <div class="section-title"><span class="icon">📊</span>Live Signals</div>
+        <div class="tabs">
+          <button class="tab-btn active" onclick="switchHomeTab(this,'spot')">Spot</button>
+          <button class="tab-btn" onclick="switchHomeTab(this,'futures')">Futures</button>
+        </div>
+      </div>
+      <div id="home-signals-spot"></div>
+      <div id="home-signals-futures" style="display:none;"></div>
+    </div>
+
+    <!-- RIGHT: Portfolio + Charts -->
+    <div>
+
+      <!-- Equity curve chart -->
+      <div class="card" style="padding:20px;margin-bottom:16px;">
+        <div class="section-header">
+          <div class="section-title"><span class="icon">📈</span>Equity Curve</div>
+          <span style="font-size:11px;color:var(--text-muted);">Live vs Demo</span>
+        </div>
+        <div class="chart-container" style="height:180px;">
+          <canvas id="equity-chart"></canvas>
+        </div>
+      </div>
+
+      <!-- Signal confidence bar chart -->
+      <div class="card" style="padding:20px;margin-bottom:16px;">
+        <div class="section-header">
+          <div class="section-title"><span class="icon">🎯</span>Signal Confidence</div>
+        </div>
+        <div class="chart-container" style="height:120px;">
+          <canvas id="confidence-chart"></canvas>
+        </div>
+      </div>
+
+      <!-- Open positions table -->
+      <div class="card" style="padding:0;overflow:hidden;">
+        <div class="section-header" style="padding:16px 16px 0;">
+          <div class="section-title"><span class="icon">💼</span>Open Positions</div>
+          <a href="#" class="see-all" onclick="navigateTo('portfolio')">View All</a>
+        </div>
+        <div id="home-positions-table">
+          <div style="padding:24px;text-align:center;color:var(--text-muted);">
+            <div class="skeleton" style="height:40px;margin-bottom:8px;"></div>
+            <div class="skeleton" style="height:40px;margin-bottom:8px;"></div>
+            <div class="skeleton" style="height:40px;"></div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     PAGE: SIGNALS
+══════════════════════════════════════════════════════ -->
+<div id="page-signals" class="page page-section" style="display:none;">
+  <div style="margin-bottom:20px;">
+    <h2 style="font-size:20px;font-weight:700;margin-bottom:4px;">📊 Trading Signals</h2>
+    <div style="font-size:13px;color:var(--text-secondary);">AI-generated signals updated every 15 minutes. Min confidence: 75%</div>
+  </div>
+
+  <!-- Stats bar -->
+  <div id="signals-stats" style="margin-bottom:20px;"></div>
+
+  <!-- Spot signals -->
+  <div class="section-header">
+    <div class="section-title"><span class="icon">🪙</span>Spot Signals</div>
+    <div class="tabs">
+      <button class="tab-btn active" onclick="filterSignals(this,'all')">All</button>
+      <button class="tab-btn" onclick="filterSignals(this,'buy')">BUY</button>
+      <button class="tab-btn" onclick="filterSignals(this,'sell')">SELL</button>
+      <button class="tab-btn" onclick="filterSignals(this,'hold')">HOLD</button>
+    </div>
+  </div>
+  <div id="spot-signals-grid" class="grid-3col" style="margin-bottom:28px;"></div>
+
+  <!-- Futures signals -->
+  <div class="section-header">
+    <div class="section-title"><span class="icon">⚡</span>Futures Signals</div>
+  </div>
+  <div id="futures-signals-spot-page" class="grid-3col"></div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     PAGE: FUTURES
+══════════════════════════════════════════════════════ -->
+<div id="page-futures" class="page page-section" style="display:none;">
+  <div style="margin-bottom:20px;">
+    <h2 style="font-size:20px;font-weight:700;margin-bottom:4px;">⚡ Futures Trading</h2>
+    <div style="font-size:13px;color:var(--text-secondary);">LONG / SHORT perpetual futures with AI-optimised leverage (max 20x). <strong style="color:var(--accent-red);">High risk — use demo first.</strong></div>
+  </div>
+  <div id="futures-panel"></div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     PAGE: DEMO TRADING
+══════════════════════════════════════════════════════ -->
+<div id="page-demo" class="page page-section" style="display:none;">
+  <div id="demo-trading-container"></div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     PAGE: PORTFOLIO
+══════════════════════════════════════════════════════ -->
+<div id="page-portfolio" class="page page-section" style="display:none;">
+  <div style="margin-bottom:20px;">
+    <h2 style="font-size:20px;font-weight:700;margin-bottom:4px;">💼 Portfolio</h2>
+    <div style="font-size:13px;color:var(--text-secondary);">All balances, positions, and trade history across Live and Demo modes.</div>
+  </div>
+
+  <div id="portfolio-summary" style="margin-bottom:20px;"></div>
+
+  <div class="tabs" style="margin-bottom:16px;">
+    <button class="tab-btn active" onclick="switchPortfolioTab(this,'positions')">Open Positions</button>
+    <button class="tab-btn" onclick="switchPortfolioTab(this,'history')">Trade History</button>
+  </div>
+
+  <div id="portfolio-tab-positions">
+    <div id="portfolio-positions"></div>
+  </div>
+  <div id="portfolio-tab-history" style="display:none;">
+    <div id="portfolio-history"></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     PAGE: EXCHANGE SETTINGS
+══════════════════════════════════════════════════════ -->
+<div id="page-exchange" class="page page-section" style="display:none;">
+  <div style="margin-bottom:20px;">
+    <h2 style="font-size:20px;font-weight:700;margin-bottom:4px;">🔗 Exchange Settings</h2>
+    <div style="font-size:13px;color:var(--text-secondary);">API keys are AES-256 encrypted client-side before storage. We never see your keys.</div>
+  </div>
+
+  <div class="grid-2col">
+    <div>
+      <div id="exchange-connect-form"></div>
+    </div>
+    <div>
+      <!-- Trading settings -->
+      <div class="card" style="padding:20px;margin-bottom:16px;">
+        <div class="section-title" style="margin-bottom:16px;"><span class="icon">⚙️</span>Global Trading Settings</div>
+        <div class="toggle-row">
+          <div>
+            <div style="font-size:13px;font-weight:500;">Auto-Trade (Spot)</div>
+            <div style="font-size:11px;color:var(--text-muted);">Execute spot signals automatically</div>
+          </div>
+          <div class="toggle-switch" id="toggle-auto-spot" onclick="this.classList.toggle('on')">
+            <div class="toggle-knob"></div>
+          </div>
+        </div>
+        <div class="toggle-row">
+          <div>
+            <div style="font-size:13px;font-weight:500;">Auto-Trade (Futures)</div>
+            <div style="font-size:11px;color:var(--text-muted);">Execute futures signals automatically</div>
+          </div>
+          <div class="toggle-switch" id="toggle-auto-futures" onclick="this.classList.toggle('on')">
+            <div class="toggle-knob"></div>
+          </div>
+        </div>
+        <div class="toggle-row">
+          <div>
+            <div style="font-size:13px;font-weight:500;">Auto-Trade (Demo)</div>
+            <div style="font-size:11px;color:var(--text-muted);">Execute demo signals automatically</div>
+          </div>
+          <div class="toggle-switch on" id="toggle-auto-demo" onclick="this.classList.toggle('on')">
+            <div class="toggle-knob"></div>
+          </div>
+        </div>
+        <div class="toggle-row">
+          <div>
+            <div style="font-size:13px;font-weight:500;">Telegram Alerts</div>
+            <div style="font-size:11px;color:var(--text-muted);">Receive signal + trade notifications</div>
+          </div>
+          <div class="toggle-switch on" id="toggle-telegram" onclick="this.classList.toggle('on')">
+            <div class="toggle-knob"></div>
+          </div>
+        </div>
+
+        <div style="margin-top:16px;">
+          <div class="form-group">
+            <label class="form-label">Min Signal Confidence (%)</label>
+            <input class="form-input" type="range" min="60" max="95" value="75" id="conf-slider"
+              oninput="document.getElementById('conf-val').textContent=this.value+'%'" />
+            <div style="text-align:center;font-size:14px;font-weight:700;" id="conf-val">75%</div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Max Risk Per Trade (%)</label>
+            <input class="form-input" type="number" value="2" min="0.5" max="5" step="0.5" />
+          </div>
+        </div>
+
+        <button class="btn btn-primary" style="width:100%;margin-top:8px;" onclick="saveSettings()">
+          Save Settings
+        </button>
+      </div>
+
+      <!-- Connected exchanges -->
+      <div class="card" style="padding:20px;">
+        <div class="section-title" style="margin-bottom:12px;"><span class="icon">✅</span>Connected Exchanges</div>
+        <div id="connected-exchanges">
+          <div style="color:var(--text-muted);font-size:13px;">No exchanges connected yet.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     SCRIPTS
+══════════════════════════════════════════════════════ -->
+<script type="module">
+import {
+  AppState, setMode, showToast, navigateTo,
+  startSignalListener, startPortfolioListener, startDemoListener,
+  formatPrice, formatPnl
+} from './js/app.js';
+import { renderSignals, renderSignalStats } from './js/signals.js';
+import { renderFuturesPanel } from './js/futures.js';
+import { renderDemoPage } from './js/demo.js';
+import { renderPortfolioSummary, renderOpenPositions, renderTradeHistory } from './js/portfolio.js';
+import { renderExchangeConnectForm, renderConnectedExchanges } from './js/exchange.js';
+import { renderEquityCurve, renderConfidenceChart, startChartRefresh } from './js/charts.js';
+import { auth, googleProvider } from './js/firebase-config.js';
+import { signInWithPopup, signOut } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+
+// ─── Auth handler ─────────────────────────────────────────
+window.handleAuth = async function() {
+  if (AppState.user) {
+    await signOut(auth);
+    document.getElementById('auth-btn').textContent = 'Sign In';
+    showToast('Signed out', 'info');
+  } else {
+    try {
+      await signInWithPopup(auth, googleProvider);
+      document.getElementById('auth-btn').textContent = 'Sign Out';
+      showToast('Signed in!', 'success');
+    } catch(e) {
+      showToast('Sign in failed: ' + e.message, 'error');
+    }
+  }
+};
+
+// ─── Page renderers ───────────────────────────────────────
+function initHomePage() {
+  renderSignals('home-signals-spot',    'spot');
+  renderSignals('home-signals-futures', 'futures');
+  renderOpenPositions('home-positions-table');
+  renderConfidenceChart('confidence-chart', AppState.signals);
+  renderEquityCurve('equity-chart');
+}
+
+function initSignalsPage() {
+  renderSignalStats('signals-stats');
+  renderSignals('spot-signals-grid', 'spot');
+  renderSignals('futures-signals-spot-page', 'futures');
+}
+
+function initFuturesPage() {
+  renderFuturesPanel('futures-panel');
+}
+
+function initDemoPage() {
+  renderDemoPage('demo-trading-container');
+}
+
+function initPortfolioPage() {
+  renderPortfolioSummary('portfolio-summary');
+  renderOpenPositions('portfolio-positions');
+}
+
+function initExchangePage() {
+  renderExchangeConnectForm('exchange-connect-form');
+  const exchanges = AppState.user
+    ? [] // would come from Firestore user doc
+    : [];
+  renderConnectedExchanges('connected-exchanges', exchanges);
+}
+
+// ─── Home stats updater ───────────────────────────────────
+function updateHomeStats() {
+  const p = AppState.portfolio;
+  const d = AppState.demoAccount;
+
+  const liveBal  = p?.total_live_balance || 0;
+  const livePnl  = p?.live_pnl_usdt || 0;
+  const demoTot  = d?.balance?.USDT?.total || 10000;
+  const demoInit = d?.initial_balance || 10000;
+  const demoPnl  = demoTot - demoInit;
+
+  const openLive = p?.open_live_trades || 0;
+  const openDemo = (p?.open_demo_spot || 0) + (p?.open_demo_futures || 0);
+
+  const sigCount = Object.values(AppState.signals).filter(s =>
+    s?.spot_latest?.signal && s.spot_latest.signal !== 'HOLD'
+  ).length;
+
+  document.getElementById('stat-live-balance').textContent = `$${liveBal.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}`;
+  const livePnlEl = document.getElementById('stat-live-pnl');
+  livePnlEl.textContent = `${livePnl>=0?'+':''}$${Math.abs(livePnl).toFixed(2)} today`;
+  livePnlEl.className = `change ${livePnl>=0?'green':'red'}`;
+
+  document.getElementById('stat-demo-balance').textContent = `$${demoTot.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}`;
+  const demoPnlEl = document.getElementById('stat-demo-pnl');
+  demoPnlEl.textContent = `${demoPnl>=0?'+':''}$${Math.abs(demoPnl).toFixed(2)} from $${demoInit.toLocaleString()}`;
+  demoPnlEl.className = `change ${demoPnl>=0?'green':'red'}`;
+
+  document.getElementById('stat-signals').textContent = sigCount;
+  document.getElementById('stat-open-trades').textContent = openLive + openDemo;
+  document.getElementById('stat-open-trades-sub').textContent = `${openLive} live · ${openDemo} demo`;
+}
+
+// ─── Signal listener updates all active views ─────────────
+startSignalListener((coin, data) => {
+  const activePage = document.querySelector('.page-section.active')?.id;
+  updateHomeStats();
+  if (activePage === 'page-home') {
+    renderSignals('home-signals-spot', 'spot');
+    renderSignals('home-signals-futures', 'futures');
+    renderConfidenceChart('confidence-chart', AppState.signals);
+  }
+  if (activePage === 'page-signals') initSignalsPage();
+  if (activePage === 'page-futures') renderFuturesPanel('futures-panel');
+});
+
+// ─── Auth state → start real-time listeners ───────────────
+document.addEventListener('authChanged', ({ detail: { user } }) => {
+  const btn = document.getElementById('auth-btn');
+  if (btn) btn.textContent = user ? 'Sign Out' : 'Sign In';
+
+  if (user) {
+    startPortfolioListener(user.uid, () => {
+      updateHomeStats();
+      const ap = document.querySelector('.page-section.active')?.id;
+      if (ap === 'page-portfolio') initPortfolioPage();
+    });
+    startDemoListener(user.uid, () => {
+      updateHomeStats();
+      const ap = document.querySelector('.page-section.active')?.id;
+      if (ap === 'page-demo') initDemoPage();
+    });
+  }
+});
+
+// ─── Page navigation with lazy init ──────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  document.querySelectorAll('.page-section').forEach(el => el.style.display = 'none');
+  document.getElementById('page-home').style.display = 'block';
+
+  const pageInits = {
+    'page-home':      initHomePage,
+    'page-signals':   initSignalsPage,
+    'page-futures':   initFuturesPage,
+    'page-demo':      initDemoPage,
+    'page-portfolio': initPortfolioPage,
+    'page-exchange':  initExchangePage,
+  };
+
+  document.querySelectorAll('.navbar-nav a[data-page]').forEach(link => {
+    link.addEventListener('click', e => {
+      e.preventDefault();
+      const page = link.dataset.page;
+      document.querySelectorAll('.page-section').forEach(el => el.style.display = 'none');
+      document.querySelectorAll('.navbar-nav a').forEach(a => a.classList.remove('active'));
+      const el = document.getElementById(`page-${page}`);
+      if (el) { el.style.display = 'block'; el.classList.add('fade-in'); }
+      link.classList.add('active');
+      if (pageInits[`page-${page}`]) pageInits[`page-${page}`]();
+    });
+  });
+
+  // Initial home render
+  initHomePage();
+  startChartRefresh(30000);
+});
+
+// ─── Home tab switcher ────────────────────────────────────
+window.switchHomeTab = function(btn, tab) {
+  document.getElementById('home-signals-spot').style.display    = tab === 'spot'    ? 'block' : 'none';
+  document.getElementById('home-signals-futures').style.display = tab === 'futures' ? 'block' : 'none';
+  document.querySelectorAll('#page-home .tab-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+};
+
+window.switchPortfolioTab = function(btn, tab) {
+  document.getElementById('portfolio-tab-positions').style.display = tab === 'positions' ? 'block' : 'none';
+  document.getElementById('portfolio-tab-history').style.display   = tab === 'history'   ? 'block' : 'none';
+  document.querySelectorAll('#page-portfolio .tab-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  if (tab === 'history') renderTradeHistory('portfolio-history');
+};
+
+window.filterSignals = function(btn, filter) {
+  document.querySelectorAll('#page-signals .tab-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  // filter already applied via renderSignals — TODO: add filtering logic
+};
+
+window.navigateTo = function(page) {
+  document.querySelector(`[data-page="${page}"]`)?.click();
+};
+
+window.saveSettings = function() {
+  showToast('Settings saved', 'success');
+};
+
+// ─── Chart refresh on signal update ──────────────────────
+document.addEventListener('refreshCharts', () => {
+  renderEquityCurve('equity-chart');
+  renderConfidenceChart('confidence-chart', AppState.signals);
+});
+</script>
+
+</body>
+</html>
